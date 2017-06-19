@@ -1,0 +1,166 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use 5.010;
+
+use Encode;
+use App::BBSlides;
+use YAML::XS qw/ LoadFile /;
+use IO::All;
+use HTML::Entities qw/ encode_entities /;
+use File::Copy qw/ copy /;
+use Data::Dumper;
+
+unless (@ARGV) {
+    die "Usage: $0 slides.yaml";
+}
+my ($source) = @ARGV;
+my @slides = LoadFile($source);
+
+my $p = App::BBSlides->new({
+    tags => {
+        Parse::BBCode::HTML->defaults(qw/ b i p size list * /),
+        App::BBSlides->defaults,
+    },
+    escapes => {
+        Parse::BBCode::HTML->default_escapes,
+        App::BBSlides->default_escapes,
+    },
+});
+my $help = <<"EOM";
+Usage: next: ( space or -&gt; ) | previous: ( backspace or &lt;- ) |
+next page: ( page down ) | previous page: ( page up ) |
+index: ( arrow-up )
+EOM
+
+for my $i (0 .. $#slides) {
+    generate_slide(num => $i + 1, slide => $slides[$i], max => scalar @slides);
+}
+generate_index(max => scalar @slides, slides => \@slides);
+generate_source($source);
+
+sub generate_slide {
+    my (%args) = @_;
+    my $slide = $args{slide};
+    my $i = $args{num};
+    my $max = $args{max};
+    my $title = $slide->{title};
+    my $code = $slide->{content};
+    my $tree = $p->parse($code);
+    if (my $error = $p->error) {
+        warn __PACKAGE__.':'.__LINE__.$".Data::Dumper->Dump([\$error], ['error']);
+        my $tree = $p->get_tree;
+        my $corrected = $tree->raw_text;
+        die "error: $corrected";
+    }
+    my $script = '';
+    $tree->walk( bfs => sub {
+        my ($tag) = @_;
+        my %attributes = map { defined $_->[1] ? ($_->[0] => $_->[1]) : ('' => $_->[0] )} @{ $tag->{attr} };
+        my $id = $tag->get_id;
+        my $name = $tag->get_name;
+        if (keys %attributes) {
+            if (my $ani = $attributes{animation}) {
+                my ($num, $type) = split m/,/, $ani;
+                if ($type =~ m/^(appear|flyin)$/) {
+                    $script .= <<"EOM";
+    \$('#node_' + $id).hide();
+EOM
+                }
+                $script .= <<"EOM";
+    register_animation('node_$id', $num, '$type');
+EOM
+            }
+        }
+        return 0;
+    });
+    my $html = $p->render_tree($tree);
+
+    my $next = sprintf "slide%03d.html", $i + 1;
+    my $prev = sprintf "slide%03d.html", $i - 1;
+    if ($i == 1) {
+        $prev = "index.html";
+    }
+    if ($i == $max) {
+        $next = "index.html";
+    }
+    my $page = <<"EOM";
+<html>
+<head>
+<title>$title</title>
+<script src="js/jquery-3.1.1.min.js"></script>
+<script src="js/bbslides.js"></script>
+<link rel="stylesheet" type="text/css" href="css/slides.css">
+</head>
+
+<body>
+<div id="slideframe">
+$html
+</div>
+<script type="text/javascript">
+$script
+var prev_page = '$prev';
+var next_page = '$next';
+</script>
+<div id="bbslides-navi">
+Slide $i/$max
+<a href="$prev" onclick="next_step()">BACK</a>
+<a href="index.html">UP</a>
+<a href="$next" onclick="next_step()">NEXT</a>
+$help
+<br>
+<progress id="slide-progress" value="$i" max="$max"></progress>
+</div>
+</body>
+</html>
+EOM
+    my $filename = sprintf "slides/slide%03d.html", $i;
+    say "Generated $filename";
+    io($filename)->print($page);
+
+}
+
+sub generate_index {
+    my (%args) = @_;
+    my $slides = $args{slides};
+    my $list;
+    for my $i (0 .. $#slides) {
+        my $num = $i + 1;
+        my $slide = $slides[ $i ];
+        my $title = $slide->{title};
+        my $filename = sprintf "slide%03d.html", $num;
+        $list .= qq{<li><a href="$filename">$num - $title</a></li>\n};
+    }
+    my $first = sprintf "slide%03d.html", 1;
+    my $index = <<"EOM";
+<html><head><title>Presentation</title>
+<script src="js/jquery-3.1.1.min.js"></script>
+<script src="js/bbslides.js"></script>
+<link rel="stylesheet" type="text/css" href="css/slides.css">
+<script type="text/javascript">
+var next_page = '$first';
+</script>
+</head>
+<body>
+<div id="slideframe">
+<ul>
+$list
+<li><a href="source.yaml">YAML/BBCode Source for this presentation</a></li>
+</ul>
+</div>
+<div id="bbslides-navi">
+<a href="$first" onclick="next_step()">NEXT</a>
+$help
+</div>
+</body>
+</html>
+EOM
+    my $filename = "slides/index.html";
+    say "Generated $filename";
+    io($filename)->print($index);
+}
+
+sub generate_source {
+    my ($file) = @_;
+    copy($file, "slides/source.yaml");
+}
