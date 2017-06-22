@@ -3,9 +3,11 @@ body {
     background-color: #eee;
 }
 
-#slideframe {
+#bbslides-slide {
+    height: 85%;
+}
+div.bbslides-frame {
     width: 95%;
-    height: 80%;
     background-color: #fff;
     border: 1px solid gray;
     border-radius: 8px;
@@ -21,7 +23,7 @@ body {
     border-radius: 8px 8px 0px 0px;
     box-shadow: 3px 3px 1px #888888;
     background-color: #fff;
-    position: absolute;
+    position: fixed;
     bottom: 0px;
     margin: 5px auto 0px auto;
     padding: 5px;
@@ -32,6 +34,9 @@ body {
     height: 5px;
     width: 100%;
 }
+#usage {
+    font-size: 90%;
+}
 
 .codebox {
     border: 1px solid lightgray;
@@ -40,6 +45,10 @@ body {
     white-space: pre;
     display: inline-block;
     margin: 3px;
+    padding: 5px;
+}
+.codeboxsmall {
+    font-size: 80%;
 }
 
 .bbslides-tab {
@@ -48,9 +57,24 @@ body {
 .bbslides-trspace {
     background-color: #ff6060;
 }
+.bbslides-indent {
+    background-color: #ccc;
+}
 .bbslides-comment {
     color: #888888;
 }
+.bbslides-anchor {
+    color: green;
+}
+.bbslides-alias {
+    color: green;
+}
 .bbslides-h1 {
     text-align: center;
+}
+div.bbslides-horizontal {
+    display: inline-block;
+}
+div.bbslides-horizontal div {
+    float: left;
 }

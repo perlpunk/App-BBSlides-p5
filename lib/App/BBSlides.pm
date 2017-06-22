@@ -1,84 +1,195 @@
 use strict;
 use warnings;
+use 5.010;
 package App::BBSlides;
 
-use base qw/ Parse::BBCode /;
+use App::BBSlides::BBCode;
+use IO::All;
+use File::Copy qw/ copy /;
+use Encode;
+use HTML::Entities qw/ encode_entities /;
 
-my %colors = (
-    aqua    => 1,
-    black   => 1,
-    blue    => 1,
-    fuchsia => 1,
-    gray    => 1,
-    grey    => 1,
-    green   => 1,
-    lime    => 1,
-    maroon  => 1,
-    navy    => 1,
-    olive   => 1,
-    purple  => 1,
-    red     => 1,
-    silver  => 1,
-    teal    => 1,
-    white   => 1,
-    yellow  => 1,
-);
+use base 'Class::Accessor::Fast';
+__PACKAGE__->mk_accessors(qw/ slides output source bbc /);
 
-my %default_tags = (
-    'h1'     => '<h1 id="node_%id" class="bbslides-h1">%s</h1>',
-    'color' => '<span id="node_%id" style="color: %{htmlcolor}a">%s</span>',
-    'bgcolor' => '<span id="node_%id" style="background-color: %{htmlcolor}a">%s</span>',
-    codebox => {
-        parse => 1,
-        code => sub {
-            my ($parser, $attr, $content, $attribute_fallback, $tag, $info) = @_;
-            my $id = $tag->get_id;
-            if ($info->{tags}->{codebox}) {
-                $$content =~ s/<br>$//gm;
-            }
-            my $html = <<"EOM";
-<div id="node_$id" class="codebox">$$content</div>
+my $help = <<"EOM";
+<span id="usage">next: ( space or -&gt; ) | previous: ( backspace or &lt;- ) |
+next page: ( page down ) | previous page: ( page up ) |
+index: ( arrow-up )</span>
 EOM
-            return $html;
+
+sub write {
+    my ($self) = @_;
+    my $output = $self->output;
+    my $slides = $self->slides;
+    my $source = $self->source;
+    my $p = App::BBSlides::BBCode->new({
+        tags => {
+            Parse::BBCode::HTML->defaults(qw/ b i p size list * /),
+            App::BBSlides::BBCode->defaults,
         },
-    },
-    'tab' => '<span id="node_%id" class="bbslides-tab">%s</span>',
-    'trspace' => '<span id="node_%id" class="bbslides-trspace">%s</span>',
-    'comment' => '<span id="node_%id" class="bbslides-comment">%s</span>',
-);
+        escapes => {
+            Parse::BBCode::HTML->default_escapes,
+            App::BBSlides::BBCode->default_escapes,
+        },
+        attribute_quote => q/'"/,
+    });
+    $self->bbc($p);
 
-my %default_escapes = (
-    htmlcolor => sub {
-        my $color = $_[2];
-        ($color =~ m/^(?:#[0-9a-fA-F]{6})\z/ || exists $colors{lc $color})
-        ? $color : 'inherit'
-    },
-);
+    copy_static($output);
+    for my $i (0 .. $#$slides) {
+        $self->generate_slide(num => $i + 1, slide => $slides->[$i], max => scalar @$slides);
+    }
+    $self->generate_index(max => scalar @$slides, slides => $slides);
+    $self->generate_source($source);
+    copy_static($output);
 
-my %optional_tags = (
-);
-
-sub defaults {
-    my ($class, @keys) = @_;
-    return @keys
-        ? (map { $_ => $default_tags{$_} } grep { defined $default_tags{$_} } @keys)
-        : %default_tags;
 }
 
-sub default_escapes {
-    my ($class, @keys) = @_;
-    return @keys
-        ? (map { $_ => $default_escapes{$_} } grep  { defined $default_escapes{$_} } @keys)
-        : %default_escapes;
+sub generate_slide {
+    my ($self, %args) = @_;
+    my $output = $self->output;
+    my $p = $self->bbc;
+    my $slide = $args{slide};
+    my $i = $args{num};
+    my $max = $args{max};
+    my $title = $slide->{title};
+    my $code = $slide->{content};
+    my $tree = $p->parse($code);
+    if (my $error = $p->error) {
+        warn __PACKAGE__.':'.__LINE__.$".Data::Dumper->Dump([\$error], ['error']);
+        my $tree = $p->get_tree;
+        my $corrected = $tree->raw_text;
+        die "error: $corrected";
+    }
+    my $script = '';
+    $tree->walk( bfs => sub {
+        my ($tag) = @_;
+        if ($tag->get_name eq 'title') {
+            my $content = $tag->get_content;
+            if (@$content == 1 and $content->[0] eq '') {
+                $content->[0] = $title;
+            }
+        }
+        my %attributes = map { defined $_->[1] ? ($_->[0] => $_->[1]) : ('' => $_->[0] )} @{ $tag->{attr} };
+        my $id = $tag->get_id;
+        my $name = $tag->get_name;
+        if (keys %attributes) {
+            if (my $ani = $attributes{animation}) {
+                my ($num, $type, $args) = split m/,/, $ani, 3;
+                $args ||= '{}';
+                $script .= <<"EOM";
+register_animation('node_$id', $num, '$type', $args);
+EOM
+            }
+        }
+        return 0;
+    });
+    my $html = $p->render_tree($tree);
+
+    my $next = sprintf "slide%03d.html", $i + 1;
+    my $prev = sprintf "slide%03d.html", $i - 1;
+    if ($i == 1) {
+        $prev = "index.html";
+    }
+    if ($i == $max) {
+        $next = "index.html";
+    }
+    my $page = <<"EOM";
+<html>
+<head>
+<meta charset="utf-8">
+<title>$title</title>
+<link rel="prev" href="$prev" />
+<link rel="next" href="$next" />
+<script src="js/jquery-3.1.1.min.js"></script>
+<script src="js/bbslides.js"></script>
+<script src="js/navi.js"></script>
+<link rel="stylesheet" type="text/css" href="css/slides.css">
+</head>
+
+<body>
+<div id="bbslides-slide" class="bbslides-frame">
+$html
+</div>
+<script type="text/javascript">
+$script
+var prev_page = '$prev';
+var next_page = '$next';
+</script>
+<div id="bbslides-navi">
+Slide $i/$max
+<a href="$prev" onclick="previous_step();return false">BACK</a>
+<a href="index.html">UP</a>
+<a href="$next" onclick="next_step(); return false">NEXT</a>
+$help
+<br>
+<progress id="slide-progress" value="$i" max="$max"></progress>
+</div>
+</body>
+</html>
+EOM
+    my $filename = sprintf "$output/slide%03d.html", $i;
+    say "Generated $filename";
+    io($filename)->utf8->print($page);
+
 }
 
-sub optional {
-    my ($class, @keys) = @_;
-    return @keys
-        ? (map { $_ => $optional_tags{$_} } grep  { defined $optional_tags{$_} } @keys)
-        : %optional_tags;
+sub generate_index {
+    my ($self, %args) = @_;
+    my $output = $self->output;
+
+    my $slides = $args{slides};
+    my $list;
+    for my $i (0 .. $#$slides) {
+        my $num = $i + 1;
+        my $slide = $slides->[ $i ];
+        my $title = $slide->{title};
+        my $filename = sprintf "slide%03d.html", $num;
+        $list .= qq{<li><a href="$filename">$num - $title</a></li>\n};
+    }
+    my $first = sprintf "slide%03d.html", 1;
+    my $index = <<"EOM";
+<html><head><title>Presentation</title>
+<meta charset="utf-8">
+<script src="js/jquery-3.1.1.min.js"></script>
+<script src="js/bbslides.js"></script>
+<link rel="stylesheet" type="text/css" href="css/slides.css">
+<script type="text/javascript">
+var next_page = '$first';
+</script>
+</head>
+<body>
+<div class="bbslides-frame">
+<ul>
+$list
+<li><a href="source.yaml">YAML/BBCode Source for this presentation</a></li>
+</ul>
+</div>
+<div id="bbslides-navi">
+<a href="$first" onclick="next_step()">NEXT</a>
+$help
+</div>
+</body>
+</html>
+EOM
+    my $filename = "$output/index.html";
+    say "Generated $filename";
+    io($filename)->print($index);
 }
 
+sub generate_source {
+    my ($self, $file) = @_;
+    my $output = $self->output;
+    copy($file, "$output/source.yaml");
+}
 
-
+sub copy_static {
+    my ($output) = @_;
+    mkdir $output;
+    mkdir "$output/js";
+    mkdir "$output/css";
+    system("cp share/js/*.js $output/js/");
+    system("cp share/css/*.css $output/css/");
+}
 1;
