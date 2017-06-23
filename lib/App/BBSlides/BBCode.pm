@@ -57,6 +57,19 @@ EOM
             return $html;
         },
     },
+    include => {
+        close => 0,
+        parse => 1,
+        code => sub {
+            my ($parser, $attr, $content, $attribute_fallback, $tag, $info) = @_;
+            # TODO disallow absolute paths
+            open my $fh, '<', $attr or die $!;
+            $content = do { local $/; <$fh> };
+            close $fh;
+            return $content;
+        },
+
+    },
     'tab' => '<span id="node_%id" class="bbslides-tab">%s</span>',
     'trspace' => '<span id="node_%id" class="bbslides-trspace">%s</span>',
     'indent' => '<span id="node_%id" class="bbslides-indent">%s</span>',

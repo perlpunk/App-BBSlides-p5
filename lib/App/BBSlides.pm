@@ -25,7 +25,7 @@ sub write {
     my $source = $self->source;
     my $p = App::BBSlides::BBCode->new({
         tags => {
-            Parse::BBCode::HTML->defaults(qw/ b i p size list * /),
+            Parse::BBCode::HTML->defaults(qw/ b i p size list * html /),
             App::BBSlides::BBCode->defaults,
         },
         escapes => {
@@ -99,6 +99,7 @@ EOM
 <html>
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-store" />
 <title>$title</title>
 <link rel="prev" href="$prev" />
 <link rel="next" href="$next" />
@@ -106,6 +107,7 @@ EOM
 <script src="js/bbslides.js"></script>
 <script src="js/navi.js"></script>
 <link rel="stylesheet" type="text/css" href="css/slides.css">
+<link rel="stylesheet" type="text/css" href="css/ansicolor.css">
 </head>
 
 <body>
