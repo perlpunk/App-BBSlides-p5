@@ -25,7 +25,7 @@ sub write {
     my $source = $self->source;
     my $p = App::BBSlides::BBCode->new({
         tags => {
-            Parse::BBCode::HTML->defaults(qw/ b i p size list * html /),
+            Parse::BBCode::HTML->defaults(qw/ b i p size list * html url /),
             App::BBSlides::BBCode->defaults,
         },
         escapes => {
