@@ -14,15 +14,17 @@ unless (@ARGV) {
 my ($source) = @ARGV;
 GetOptions(
     "out=s" => \my $out,
+    "data=s" => \my $datadir,
 );
 unless ($out) {
-    die "Usage: $0 slides.yaml --out output-directory";
+    die "Usage: $0 slides.yaml --out output-directory [--data data-dir]";
 }
 my @slides = LoadFile($source);
 
 my $bbs = App::BBSlides->new({
     slides => [@slides],
     output => $out,
+    datadir => $datadir,
     source => $source,
 });
 

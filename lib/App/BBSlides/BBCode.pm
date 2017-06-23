@@ -3,6 +3,7 @@ use warnings;
 package App::BBSlides::BBCode;
 
 use base qw/ Parse::BBCode /;
+__PACKAGE__->mk_accessors(qw/ datadir /);
 
 my %colors = (
     aqua    => 1,
@@ -62,8 +63,9 @@ EOM
         parse => 1,
         code => sub {
             my ($parser, $attr, $content, $attribute_fallback, $tag, $info) = @_;
-            # TODO disallow absolute paths
-            open my $fh, '<', $attr or die $!;
+            # TODO disallow absolute paths or ..
+            my $data = $parser->get_datadir or die "No data directory given";
+            open my $fh, '<', "$data/$attr" or die $!;
             $content = do { local $/; <$fh> };
             close $fh;
             return $content;

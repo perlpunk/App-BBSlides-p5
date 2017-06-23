@@ -10,7 +10,7 @@ use Encode;
 use HTML::Entities qw/ encode_entities /;
 
 use base 'Class::Accessor::Fast';
-__PACKAGE__->mk_accessors(qw/ slides output source bbc /);
+__PACKAGE__->mk_accessors(qw/ slides output source bbc datadir /);
 
 my $help = <<"EOM";
 <span id="usage">next: ( space or -&gt; ) | previous: ( backspace or &lt;- ) |
@@ -23,7 +23,9 @@ sub write {
     my $output = $self->output;
     my $slides = $self->slides;
     my $source = $self->source;
+    my $datadir = $self->datadir;
     my $p = App::BBSlides::BBCode->new({
+        datadir => $self->datadir,
         tags => {
             Parse::BBCode::HTML->defaults(qw/ b i p size list * html url /),
             App::BBSlides::BBCode->defaults,
