@@ -43,7 +43,12 @@ function register_animation(id, num, type, param) {
     }
 }
 function previous_step() {
-    previous_page();
+    if (animation_number > 0) {
+        location.reload();
+    }
+    else {
+        previous_page();
+    }
 }
 function next_step() {
     if (animation_number < animations.length) {
