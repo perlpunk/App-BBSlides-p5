@@ -72,6 +72,13 @@ EOM
         },
 
     },
+    'br' => {
+        #close => 0,
+        parse => 1,
+        code => sub {
+            return '<br>';
+        },
+    },
     'tab' => '<span id="node_%id" class="bbslides-tab">%s</span>',
     'trspace' => '<span id="node_%id" class="bbslides-trspace">%s</span>',
     'indent' => '<span id="node_%id" class="bbslides-indent">%s</span>',

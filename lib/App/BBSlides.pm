@@ -25,6 +25,7 @@ sub write {
     my $source = $self->source;
     my $datadir = $self->datadir;
     my $p = App::BBSlides::BBCode->new({
+        linebreaks => 0,
         datadir => $self->datadir,
         tags => {
             Parse::BBCode::HTML->defaults(qw/ b i p size list * html url /),
@@ -113,6 +114,7 @@ EOM
 </head>
 
 <body>
+<div id="test"></div>
 <div id="bbslides-slide" class="bbslides-frame">
 $html
 </div>
