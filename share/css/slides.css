@@ -16,6 +16,7 @@ body {
 }
 div.bbslides-frame {
     width: 98%;
+    width: 1130px;
     background-color: #fff;
     border: 1px solid gray;
     border-radius: 8px;
@@ -50,6 +51,7 @@ div.bbslides-frame {
     border: 1px solid lightgray;
     border-radius: 1px;
     font-family: monospace;
+    font-size: 98%;
     white-space: pre;
     display: inline-block;
     margin: 3px;

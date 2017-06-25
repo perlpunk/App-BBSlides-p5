@@ -39,7 +39,7 @@ function register_animation(id, num, type, param) {
         elem.hide();
     }
     else if (type == 'greyin') {
-        elem.css('color', '#bbb');
+        elem.css('color', '#ddd');
     }
 }
 function previous_step() {

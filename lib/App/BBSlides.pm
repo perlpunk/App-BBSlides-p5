@@ -68,8 +68,8 @@ sub generate_slide {
     my $script = '';
     $tree->walk( bfs => sub {
         my ($tag) = @_;
+        my $content = $tag->get_content;
         if ($tag->get_name eq 'title') {
-            my $content = $tag->get_content;
             if (@$content == 1 and $content->[0] eq '') {
                 $content->[0] = $title;
             }
@@ -79,11 +79,23 @@ sub generate_slide {
         my $name = $tag->get_name;
         if (keys %attributes) {
             if (my $ani = $attributes{animation}) {
-                my ($num, $type, $args) = split m/,/, $ani, 3;
-                $args ||= '{}';
-                $script .= <<"EOM";
+                if ($tag->get_name eq 'list') {
+                    my ($num, $type, $args) = split m/,/, $ani, 3;
+                    for my $n (@$content) {
+                        if (ref $n and $n->get_name eq '*') {
+                            $num++;
+                            my $attr = $n->get_attr;
+                            push @$attr, [ animation => "$num,$type,$args" ];
+                        }
+                    }
+                }
+                else {
+                    my ($num, $type, $args) = split m/,/, $ani, 3;
+                    $args ||= '{}';
+                    $script .= <<"EOM";
 register_animation('node_$id', $num, '$type', $args);
 EOM
+                }
             }
         }
         return 0;

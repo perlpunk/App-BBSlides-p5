@@ -58,6 +58,20 @@ EOM
             return $html;
         },
     },
+    '*' => {
+        parse => 1,
+        code => sub {
+            my ($parser, $attr, $content, $attribute_fallback, $tag, $info) = @_;
+            $$content =~ s/\n+\z//;
+            my $id = $tag->get_id;
+            if ($info->{stack}->[-2] eq 'list') {
+                return qq{<li id="node_$id">$$content</li>},
+            }
+            return Parse::BBCode::escape_html($tag->raw_text);
+        },
+        close => 0,
+        class => 'block',
+    },
     include => {
         close => 0,
         parse => 1,
