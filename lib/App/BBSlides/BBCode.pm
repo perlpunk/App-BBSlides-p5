@@ -33,6 +33,7 @@ my %default_tags = (
     'bgcolor' => '<span id="node_%id" style="background-color: %{htmlcolor}a">%s</span>',
     'codebox' => '<div id="node_%id" class="codebox">%s</div>',
     'codeboxsmall' => '<div id="node_%id" class="codebox codeboxsmall">%s</div>',
+    'small' => '<span id="node_%id" class="small">%s</small>',
     '*' => {
         parse => 1,
         code => sub {
@@ -61,6 +62,8 @@ my %default_tags = (
         },
 
     },
+    'pre' => '<pre id="node_%id">%s</pre>',
+    'img'   => '<img src="data/%A" alt="[%{html}s]" title="%{html}s">',
     'br' => {
         single => 1,
         parse => 1,

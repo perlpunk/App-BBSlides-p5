@@ -28,7 +28,9 @@ sub write {
         linebreaks => 0,
         datadir => $self->datadir,
         tags => {
-            Parse::BBCode::HTML->defaults(qw/ b i p size list * html url noparse /),
+            Parse::BBCode::HTML->defaults(qw/
+                b i p size list * html url noparse img
+            /),
             App::BBSlides::BBCode->defaults,
         },
         escapes => {

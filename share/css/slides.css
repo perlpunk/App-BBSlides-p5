@@ -58,6 +58,9 @@ div.bbslides-frame {
     padding: 5px;
 }
 .codeboxsmall {
+    font-size: 70%;
+}
+.small {
     font-size: 80%;
 }
 
@@ -79,7 +82,13 @@ div.bbslides-frame {
 .bbslides-alias {
     color: green;
 }
+h1 {
+    margin: 3px;
+}
 .bbslides-h1 {
+    text-align: center;
+}
+.bbslides-h2 {
     text-align: center;
 }
 div.bbslides-horizontal {
