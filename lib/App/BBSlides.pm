@@ -28,7 +28,7 @@ sub write {
         linebreaks => 0,
         datadir => $self->datadir,
         tags => {
-            Parse::BBCode::HTML->defaults(qw/ b i p size list * html url /),
+            Parse::BBCode::HTML->defaults(qw/ b i p size list * html url noparse /),
             App::BBSlides::BBCode->defaults,
         },
         escapes => {
@@ -127,7 +127,9 @@ EOM
 </head>
 
 <body>
+<!--
 <div id="test"></div>
+-->
 <div id="bbslides-slide" class="bbslides-frame">
 $html
 </div>
