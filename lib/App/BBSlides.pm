@@ -85,6 +85,7 @@ sub generate_slide {
                         if (ref $n and $n->get_name eq '*') {
                             $num++;
                             my $attr = $n->get_attr;
+                            $args //= '';
                             push @$attr, [ animation => "$num,$type,$args" ];
                         }
                     }

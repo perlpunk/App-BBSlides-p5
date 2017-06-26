@@ -27,37 +27,12 @@ my %colors = (
 
 my %default_tags = (
     'h1'    => '<h1 id="node_%id" class="bbslides-h1">%s</h1>',
+    'h2'    => '<h2 id="node_%id" class="bbslides-h2">%s</h2>',
     'title' => '<h1 id="node_%id" class="bbslides-h1">%s</h1>',
     'color' => '<span id="node_%id" style="color: %{htmlcolor}a">%s</span>',
     'bgcolor' => '<span id="node_%id" style="background-color: %{htmlcolor}a">%s</span>',
-    codebox => {
-        parse => 1,
-        code => sub {
-            my ($parser, $attr, $content, $attribute_fallback, $tag, $info) = @_;
-            my $id = $tag->get_id;
-            if ($info->{tags}->{codebox}) {
-                $$content =~ s/<br>$//gm;
-            }
-            my $html = <<"EOM";
-<div id="node_$id" class="codebox">$$content</div>
-EOM
-            return $html;
-        },
-    },
-    codeboxsmall => {
-        parse => 1,
-        code => sub {
-            my ($parser, $attr, $content, $attribute_fallback, $tag, $info) = @_;
-            my $id = $tag->get_id;
-            if ($info->{tags}->{codeboxsmall}) {
-                $$content =~ s/<br>$//gm;
-            }
-            my $html = <<"EOM";
-<div id="node_$id" class="codebox codeboxsmall">$$content</div>
-EOM
-            return $html;
-        },
-    },
+    'codebox' => '<div id="node_%id" class="codebox">%s</div>',
+    'codeboxsmall' => '<div id="node_%id" class="codebox codeboxsmall">%s</div>',
     '*' => {
         parse => 1,
         code => sub {
@@ -73,7 +48,7 @@ EOM
         class => 'block',
     },
     include => {
-        close => 0,
+        single => 1,
         parse => 1,
         code => sub {
             my ($parser, $attr, $content, $attribute_fallback, $tag, $info) = @_;
@@ -87,7 +62,7 @@ EOM
 
     },
     'br' => {
-        #close => 0,
+        single => 1,
         parse => 1,
         code => sub {
             return '<br>';
