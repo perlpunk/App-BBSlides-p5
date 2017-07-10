@@ -9,15 +9,16 @@ use Data::Dumper;
 use Getopt::Long;
 
 unless (@ARGV) {
-    die "Usage: $0 slides.yaml --out output-directory";
+    die "Usage: " . usage();
 }
 my ($source) = @ARGV;
 GetOptions(
     "out=s" => \my $out,
     "data=s" => \my $datadir,
+    "html-data=s" => \my $htmldatadir,
 );
 unless ($out) {
-    die "Usage: $0 slides.yaml --out output-directory [--data data-dir]";
+    die "Usage: " . usage();
 }
 my @slides = LoadFile($source);
 
@@ -25,8 +26,14 @@ my $bbs = App::BBSlides->new({
     slides => [@slides],
     output => $out,
     datadir => $datadir,
+    htmldatadir => $htmldatadir,
     source => $source,
 });
 
 $bbs->write;
 
+sub usage {
+    return <<"EOM";
+Usage: $0 slides.yaml --out output-directory [--data data-dir] [--html-data htmldatadir]
+EOM
+}

@@ -3,6 +3,7 @@ use warnings;
 use 5.010;
 package App::BBSlides;
 
+use File::Share qw/ dist_dir /;
 use App::BBSlides::BBCode;
 use IO::All;
 use File::Copy qw/ copy /;
@@ -10,7 +11,7 @@ use Encode;
 use HTML::Entities qw/ encode_entities /;
 
 use base 'Class::Accessor::Fast';
-__PACKAGE__->mk_accessors(qw/ slides output source bbc datadir /);
+__PACKAGE__->mk_accessors(qw/ slides output source bbc datadir htmldatadir /);
 
 my $help = <<"EOM";
 <span id="usage">next: ( space or -&gt; ) | previous: ( backspace or &lt;- ) |
@@ -41,13 +42,13 @@ sub write {
     });
     $self->bbc($p);
 
-    copy_static($output);
+    $self->copy_static($output);
     for my $i (0 .. $#$slides) {
         $self->generate_slide(num => $i + 1, slide => $slides->[$i], max => scalar @$slides);
     }
     $self->generate_index(max => scalar @$slides, slides => $slides);
     $self->generate_source($source);
-    copy_static($output);
+    $self->copy_static($output);
 
 }
 
@@ -208,11 +209,18 @@ sub generate_source {
 }
 
 sub copy_static {
-    my ($output) = @_;
+    my ($self, $output) = @_;
     mkdir $output;
     mkdir "$output/js";
     mkdir "$output/css";
-    system("cp share/js/*.js $output/js/");
-    system("cp share/css/*.css $output/css/");
+    my $share = dist_dir("App-BBSlides");
+    system("cp $share/js/*.js $output/js/");
+    system("cp $share/css/*.css $output/css/");
+    my $datadir = $self->datadir;
+    my $htmldatadir = $self->htmldatadir;
+    if ($htmldatadir) {
+        mkdir "$output/data";
+        system("cp $htmldatadir/* $output/data/");
+    }
 }
 1;
