@@ -14,11 +14,17 @@ function key_event(type, event) {
     }
     else if (code == 33) {
         event.preventDefault();
-        previous_page();
+        if (window.event.shiftKey)
+            previous_page();
+        else
+            previous_step();
     }
     else if (code == 34) {
         event.preventDefault();
-        goto_next_page();
+        if (window.event.shiftKey)
+            goto_next_page();
+        else
+            next_step();
     }
     else if (code == 38) {
         event.preventDefault();
@@ -94,6 +100,10 @@ function next_animation() {
         }
         else if (type == 'greyin') {
             elem.css('color', 'black');
+        }
+        else if (type == 'strike') {
+            elem.css('text-decoration', 'line-through');
+            elem.css('color', 'red');
         }
     });
 }

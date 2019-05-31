@@ -1,5 +1,5 @@
 body {
-    font-size: 26px; font-family: Arial;
+    font-size: 28px; font-family: Arial;
     background-color: #eee;
 }
 
@@ -15,8 +15,10 @@ body {
     height: 90%;
 }
 div.bbslides-frame {
-    width: 98%;
+    width: 92%;
+/*
     width: 1130px;
+*/
     background-color: #fff;
     border: 1px solid gray;
     border-radius: 8px;

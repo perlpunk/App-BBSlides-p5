@@ -14,8 +14,8 @@ use base 'Class::Accessor::Fast';
 __PACKAGE__->mk_accessors(qw/ slides output source bbc datadir htmldatadir /);
 
 my $help = <<"EOM";
-<span id="usage">next: ( space or -&gt; ) | previous: ( backspace or &lt;- ) |
-next page: ( page down ) | previous page: ( page up ) |
+<span id="usage">next: ( space / -&gt; / page up ) | previous: ( backspace / &lt;- / page down ) |
+next page: ( shift + page down ) | previous page: ( shift + page up ) |
 index: ( arrow-up )</span>
 EOM
 
@@ -127,6 +127,7 @@ EOM
 <script src="js/navi.js"></script>
 <link rel="stylesheet" type="text/css" href="css/slides.css">
 <link rel="stylesheet" type="text/css" href="css/ansicolor.css">
+<link rel="stylesheet" type="text/css" href="css/yaml.css">
 </head>
 
 <body>
