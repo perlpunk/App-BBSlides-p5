@@ -28,3 +28,4 @@ span.flowseq_end { font-weight: bold; color: magenta; }
 span.flowmap_start { font-weight: bold; color: magenta; }
 span.flowmap_end { font-weight: bold; color: magenta; }
 span.flow_comma { font-weight: bold; color: magenta; }
+span.plainkey { color: #005faa; }
