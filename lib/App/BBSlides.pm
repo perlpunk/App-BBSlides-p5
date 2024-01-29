@@ -221,7 +221,7 @@ sub copy_static {
     my $htmldatadir = $self->htmldatadir;
     if ($htmldatadir) {
         mkdir "$output/data";
-        system("cp $htmldatadir/* $output/data/");
+        system("cp -r $htmldatadir/* $output/data/");
     }
 }
 1;
